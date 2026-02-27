@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SHRECK SHOP — Rare Drops</title>
+  <meta name="description" content="Tienda absurda con estética neón, animaciones potentes y experiencia de compra clara." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Space Grotesk', 'sans-serif'],
+            body: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            mint: '#9cff2e',
+            mintDark: '#7ad61c',
+            cloud: '#070b14',
+            ink: '#ecf6ff',
+          },
+          boxShadow: {
+            soft: '0 18px 45px rgba(2,4,9,.55)',
+            softGreen: '0 14px 40px rgba(156,255,46,.28)',
+          },
+          keyframes: {
+            floatSoft: {
+              '0%,100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-10px)' },
+            },
+            glowPulse: {
+              '0%,100%': { opacity: '.32' },
+              '50%': { opacity: '.68' },
+            },
+            shimmer: {
+              '0%': { transform: 'translateX(-130%)' },
+              '100%': { transform: 'translateX(130%)' },
+            },
+            ticker: {
+              '0%': { transform: 'translateX(0)' },
+              '100%': { transform: 'translateX(-50%)' },
+            },
+          },
+          animation: {
+            floatSoft: 'floatSoft 7s ease-in-out infinite',
+            glowPulse: 'glowPulse 5s ease-in-out infinite',
+            shimmer: 'shimmer 3.2s linear infinite',
+            ticker: 'ticker 22s linear infinite',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root { color-scheme: dark; }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(18px) scale(.985);
+      transition: opacity .72s ease, transform .72s cubic-bezier(.16,1,.3,1);
+    }
+
+    .reveal.is-visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .tilt {
+      transform-style: preserve-3d;
+      transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+      will-change: transform;
+    }
+
+    .btn-small {
+      transition: background-color .28s ease, color .28s ease, border-color .28s ease;
+    }
+
+    .btn-small:hover {
+      background-color: rgba(156, 255, 46, 0.09);
+      border-color: rgba(156, 255, 46, 0.45);
+      color: #e8ffc8;
+    }
+
+    .noise::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.12;
+      background-image: radial-gradient(circle at 20% 20%, #ffffff50 1px, transparent 1px), radial-gradient(circle at 70% 80%, #ffffff40 1px, transparent 1px);
+      background-size: 3px 3px, 4px 4px;
+      mix-blend-mode: screen;
+    }
+  </style>
+</head>
+<body class="bg-cloud text-ink font-body overflow-x-hidden">
+  <canvas id="bg-canvas" class="fixed inset-0 -z-30"></canvas>
+  <div class="fixed inset-0 -z-20 bg-[radial-gradient(circle_at_12%_12%,rgba(128,87,255,.22),transparent_38%),radial-gradient(circle_at_90%_80%,rgba(156,255,46,.16),transparent_34%),linear-gradient(to_bottom,#050913,#090f1f)]"></div>
+  <div class="fixed inset-0 -z-10 noise"></div>
+
+  <div id="toast" class="fixed right-4 top-4 z-[70] rounded-xl border border-mint/45 bg-[#101827]/95 px-4 py-2 text-sm text-ink opacity-0 translate-y-[-8px] pointer-events-none transition-all duration-300"></div>
+
+  <div class="border-b border-mint/20 bg-[#0a111f]/80 backdrop-blur-md">
+    <div class="mx-auto max-w-7xl px-5 py-2 text-xs text-mint/90 flex items-center justify-between">
+      <p>⚡ DROP ACTIVO: 15% OFF en selección limitada · termina en <strong id="deal-countdown" class="text-mint">--:--:--</strong></p>
+      <p class="hidden sm:block text-ink/70">🚚 Envío 24/48h · 🔒 Pago seguro</p>
+    </div>
+  </div>
+
+  <header class="sticky top-0 z-40 border-b border-white/10 bg-[#070d1acc]/90 backdrop-blur-xl">
+    <div class="mx-auto max-w-7xl px-5 py-4 flex items-center justify-between gap-4">
+      <a href="#" class="font-display font-bold text-xl tracking-tight flex items-center gap-2 magnetic-large">
+        <span class="h-2.5 w-2.5 rounded-full bg-mint animate-glowPulse"></span>
+        SHRECK SHOP
+      </a>
+      <nav class="hidden md:flex items-center gap-5 text-sm text-ink/70">
+        <a href="#productos" class="hover:text-ink">Productos</a>
+        <a href="#beneficios" class="hover:text-ink">Beneficios</a>
+        <a href="#checkout" class="hover:text-ink">Checkout</a>
+      </nav>
+      <button id="cart-toggle-btn" class="magnetic-large rounded-xl border border-mint/35 bg-mint/12 px-4 py-2 font-medium text-mint hover:bg-mint hover:text-[#10130a] transition">
+        Carrito (<span id="cart-count">0</span>)
+      </button>
+    </div>
+  </header>
+
+  <div id="cart-overlay" class="fixed inset-0 z-40 bg-black/55 opacity-0 pointer-events-none transition-opacity duration-300"></div>
+  <aside id="cart-drawer" class="fixed right-0 top-0 z-50 h-full w-full max-w-md translate-x-full border-l border-white/10 bg-[#0a111f] shadow-soft transition-transform duration-300">
+    <div class="flex h-full flex-col">
+      <div class="flex items-center justify-between border-b border-white/10 px-5 py-4">
+        <h2 class="font-display text-2xl">Tu carrito</h2>
+        <button id="cart-close-btn" class="btn-small rounded-lg border border-white/15 px-3 py-1.5 text-sm text-ink/85">Cerrar</button>
+      </div>
+      <div id="cart-items-list" class="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+        <p id="cart-empty" class="rounded-xl border border-white/10 bg-white/[.03] p-4 text-sm text-ink/60">Tu carrito está vacío por ahora.</p>
+      </div>
+      <div class="border-t border-white/10 px-5 py-4 space-y-3">
+        <div class="flex items-center justify-between text-sm text-ink/70">
+          <span>Subtotal</span>
+          <strong id="cart-subtotal" class="text-mint">0,00 €</strong>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button id="cart-clear-btn" class="btn-small rounded-xl border border-white/15 px-3 py-2 text-sm">Vaciar</button>
+          <button id="cart-checkout-btn" class="rounded-xl bg-mint px-3 py-2 text-sm font-semibold text-[#10130a] hover:bg-mintDark transition">Checkout</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="mx-auto max-w-7xl px-5 pb-20">
+    <section class="pt-12 md:pt-16 grid gap-6 lg:grid-cols-[1.1fr_.9fr] items-stretch reveal">
+      <div class="rounded-3xl border border-white/10 bg-[#0d1628]/85 p-7 shadow-soft">
+        <p class="inline-flex items-center gap-2 rounded-full border border-mint/35 bg-mint/10 px-3 py-1 text-xs font-medium text-mint">NUEVA COLECCIÓN · MARZO 2026</p>
+        <h1 class="mt-4 font-display text-4xl md:text-6xl leading-[1]">Objetos absurdos que
+          <span class="block text-mint">sí quieres comprar</span>
+        </h1>
+        <p class="mt-4 max-w-xl text-ink/70">Visual potente + compra clara: filtra, compara, añade al carrito y pasa a checkout en segundos.</p>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <a href="#productos" class="magnetic-large rounded-xl bg-mint px-5 py-3 font-semibold text-[#10130a] shadow-softGreen hover:bg-mintDark transition">Ver productos</a>
+          <a href="#checkout" class="rounded-xl border border-white/15 px-5 py-3 font-medium text-ink/80 hover:border-mint/45 hover:text-mint transition">Ir a checkout</a>
+        </div>
+        <div class="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-ink/65">
+          <div class="rounded-lg bg-white/[.03] px-3 py-2">⭐ 4.9 media</div>
+          <div class="rounded-lg bg-white/[.03] px-3 py-2">📦 Stock real</div>
+          <div class="rounded-lg bg-white/[.03] px-3 py-2">🔐 Pago seguro</div>
+          <div class="rounded-lg bg-white/[.03] px-3 py-2">↩️ 14 días</div>
+        </div>
+      </div>
+
+      <article class="tilt rounded-3xl border border-mint/30 bg-[#0d1628]/85 p-7 shadow-soft animate-floatSoft">
+        <p class="text-xs uppercase tracking-[.12em] text-ink/60">Destacado del día</p>
+        <div class="mt-3 relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#1a2742] to-[#101a30] h-48">
+          <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-shimmer"></div>
+          <div class="absolute bottom-4 left-4 text-sm text-ink/80">🔥 +23 ventas hoy</div>
+        </div>
+        <h2 class="mt-4 font-display text-3xl">Tanga Trompa Prime</h2>
+        <div class="mt-1 flex items-center gap-2 text-xs text-amber-300"><span>★★★★★</span><span class="text-ink/60">(214 reseñas)</span></div>
+        <p class="mt-2 text-ink/70">El clásico de la casa: absurdo, cómodo y perfecto para regalo troll.</p>
+        <div class="mt-4 flex items-end justify-between">
+          <div>
+            <p class="text-xs text-ink/60">Precio hoy</p>
+            <p class="font-display text-5xl text-mint">29,90€</p>
+            <p class="text-xs text-ink/55 line-through">39,90€</p>
+          </div>
+          <button class="add-to-cart btn-small rounded-xl border border-white/20 px-4 py-2 text-sm font-medium" data-product-id="tanga-trompa-prime" data-product-name="Tanga Trompa Prime" data-product-price="29.90">Añadir</button>
+        </div>
+      </article>
+    </section>
+
+    <section class="mt-8 overflow-hidden border-y border-white/10 py-3 reveal">
+      <div class="w-[200%] flex gap-10 text-sm uppercase tracking-[.16em] text-ink/75 animate-ticker">
+        <span>edición limitada</span><span>ofertas flash</span><span>productos ridículos premium</span><span>checkout rápido</span><span>edición limitada</span><span>ofertas flash</span><span>productos ridículos premium</span><span>checkout rápido</span>
+      </div>
+    </section>
+
+    <section id="beneficios" class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 reveal">
+      <article class="rounded-2xl border border-white/10 bg-[#0d1628]/80 p-4"><p class="font-semibold">Envío rápido</p><p class="mt-1 text-sm text-ink/65">24/48h en península.</p></article>
+      <article class="rounded-2xl border border-white/10 bg-[#0d1628]/80 p-4"><p class="font-semibold">Pago flexible</p><p class="mt-1 text-sm text-ink/65">Tarjeta y wallet digital.</p></article>
+      <article class="rounded-2xl border border-white/10 bg-[#0d1628]/80 p-4"><p class="font-semibold">Soporte real</p><p class="mt-1 text-sm text-ink/65">Respuesta rápida por chat.</p></article>
+      <article class="rounded-2xl border border-white/10 bg-[#0d1628]/80 p-4"><p class="font-semibold">Compra segura</p><p class="mt-1 text-sm text-ink/65">Conexión cifrada y checkout protegido.</p></article>
+    </section>
+
+    <section id="productos" class="mt-10 reveal">
+      <div class="rounded-2xl border border-white/10 bg-[#0d1628]/85 p-4 md:p-5 shadow-soft">
+        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 class="font-display text-3xl">Productos destacados</h2>
+            <p class="text-sm text-ink/65">Mostrando <span id="visible-count">0</span> productos</p>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <input id="product-search" type="text" placeholder="Buscar producto..." class="rounded-xl border border-white/15 bg-[#0a1322] px-3 py-2 text-sm outline-none focus:border-mint/55" />
+            <select id="sort-select" class="rounded-xl border border-white/15 bg-[#0a1322] px-3 py-2 text-sm outline-none focus:border-mint/55">
+              <option value="popular">Más populares</option>
+              <option value="price-asc">Precio: menor a mayor</option>
+              <option value="price-desc">Precio: mayor a menor</option>
+              <option value="name">Nombre</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button class="category-filter btn-small rounded-full border border-mint/35 bg-mint/10 px-3 py-1.5 text-xs font-medium text-mint" data-filter="all">Todo</button>
+          <button class="category-filter btn-small rounded-full border border-white/15 px-3 py-1.5 text-xs" data-filter="ropa">Ropa absurda</button>
+          <button class="category-filter btn-small rounded-full border border-white/15 px-3 py-1.5 text-xs" data-filter="accesorios">Accesorios</button>
+          <button class="category-filter btn-small rounded-full border border-white/15 px-3 py-1.5 text-xs" data-filter="edicion">Edición limitada</button>
+        </div>
+
+        <div id="product-grid" class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <article class="product-card tilt rounded-2xl border border-white/12 bg-[#111c30] p-5" data-name="tanga trompa prime" data-category="ropa" data-price="29.90" data-popularity="98">
+            <div class="flex items-center justify-between">
+              <span class="rounded-full bg-mint/15 px-2.5 py-1 text-[11px] font-medium text-mint">Top ventas</span>
+              <button class="wishlist-btn btn-small rounded-md border border-white/12 px-2 py-1 text-xs text-ink/55">♡</button>
+            </div>
+            <div class="mt-3 h-32 rounded-xl border border-white/10 bg-gradient-to-br from-[#182744] to-[#111f34]"></div>
+            <h3 class="mt-3 font-display text-2xl">Tanga Trompa Prime</h3>
+            <div class="mt-1 flex items-center gap-2 text-xs text-amber-300"><span>★★★★★</span><span class="text-ink/55">(214)</span></div>
+            <p class="mt-2 text-sm text-ink/65">Ridículo absoluto, acabado premium.</p>
+            <div class="mt-3 h-2 rounded-full bg-white/10 overflow-hidden"><div class="h-full w-[78%] bg-mint/80"></div></div>
+            <p class="mt-1 text-xs text-ink/50">Quedan 12 unidades</p>
+            <div class="mt-4 flex items-center justify-between">
+              <div>
+                <strong class="text-mint">29,90 €</strong>
+                <p class="text-xs line-through text-ink/45">39,90 €</p>
+              </div>
+              <button class="add-to-cart btn-small rounded-xl border border-white/15 px-3 py-1.5 text-sm" data-product-id="tanga-trompa-prime" data-product-name="Tanga Trompa Prime" data-product-price="29.90">Añadir</button>
+            </div>
+          </article>
+
+          <article class="product-card tilt rounded-2xl border border-white/12 bg-[#111c30] p-5" data-name="orejas aerodinamicas" data-category="accesorios" data-price="34.90" data-popularity="84">
+            <div class="flex items-center justify-between">
+              <span class="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-ink/70">Novedad</span>
+              <button class="wishlist-btn btn-small rounded-md border border-white/12 px-2 py-1 text-xs text-ink/55">♡</button>
+            </div>
+            <div class="mt-3 h-32 rounded-xl border border-white/10 bg-gradient-to-br from-[#2a1a3c] to-[#1d1530]"></div>
+            <h3 class="mt-3 font-display text-2xl">Orejas Aerodinámicas</h3>
+            <div class="mt-1 flex items-center gap-2 text-xs text-amber-300"><span>★★★★☆</span><span class="text-ink/55">(97)</span></div>
+            <p class="mt-2 text-sm text-ink/65">Corre del cringe con estilo.</p>
+            <div class="mt-3 h-2 rounded-full bg-white/10 overflow-hidden"><div class="h-full w-[62%] bg-mint/70"></div></div>
+            <p class="mt-1 text-xs text-ink/50">Quedan 20 unidades</p>
+            <div class="mt-4 flex items-center justify-between">
+              <div>
+                <strong class="text-mint">34,90 €</strong>
+                <p class="text-xs line-through text-ink/45">42,90 €</p>
+              </div>
+              <button class="add-to-cart btn-small rounded-xl border border-white/15 px-3 py-1.5 text-sm" data-product-id="orejas-aerodinamicas" data-product-name="Orejas Aerodinámicas" data-product-price="34.90">Añadir</button>
+            </div>
+          </article>
+
+          <article class="product-card tilt rounded-2xl border border-white/12 bg-[#111c30] p-5" data-name="casco anti cringe x" data-category="edicion" data-price="49.90" data-popularity="91">
+            <div class="flex items-center justify-between">
+              <span class="rounded-full bg-mint/15 px-2.5 py-1 text-[11px] font-medium text-mint">Edición limitada</span>
+              <button class="wishlist-btn btn-small rounded-md border border-white/12 px-2 py-1 text-xs text-ink/55">♡</button>
+            </div>
+            <div class="mt-3 h-32 rounded-xl border border-white/10 bg-gradient-to-br from-[#0f2e2a] to-[#153626]"></div>
+            <h3 class="mt-3 font-display text-2xl">Casco Anti-Cringe X</h3>
+            <div class="mt-1 flex items-center gap-2 text-xs text-amber-300"><span>★★★★★</span><span class="text-ink/55">(143)</span></div>
+            <p class="mt-2 text-sm text-ink/65">Modo fiesta, modo supervivencia social.</p>
+            <div class="mt-3 h-2 rounded-full bg-white/10 overflow-hidden"><div class="h-full w-[40%] bg-mint/70"></div></div>
+            <p class="mt-1 text-xs text-ink/50">Quedan 6 unidades</p>
+            <div class="mt-4 flex items-center justify-between">
+              <div>
+                <strong class="text-mint">49,90 €</strong>
+                <p class="text-xs line-through text-ink/45">59,90 €</p>
+              </div>
+              <button class="add-to-cart btn-small rounded-xl border border-white/15 px-3 py-1.5 text-sm" data-product-id="casco-anti-cringe-x" data-product-name="Casco Anti-Cringe X" data-product-price="49.90">Añadir</button>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="checkout" class="mt-10 reveal">
+      <article class="rounded-3xl border border-mint/30 bg-[#0d1628]/85 p-6 shadow-soft">
+        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p class="text-xs uppercase tracking-[.12em] text-ink/55">Checkout preview</p>
+            <h3 class="mt-1 font-display text-3xl">Compra en 3 pasos: carrito → datos → pago</h3>
+            <p class="mt-2 text-sm text-ink/65">Subtotal actual: <strong id="cart-subtotal-preview" class="text-mint">0,00 €</strong> · Items: <strong id="cart-items-preview" class="text-mint">0</strong></p>
+          </div>
+          <button class="magnetic-large rounded-xl bg-mint px-5 py-3 font-semibold text-[#10130a] hover:bg-mintDark transition">Continuar compra</button>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <footer class="border-t border-white/10 bg-[#070d1a]/80 py-6 text-center text-sm text-ink/50">
+    SHRECK SHOP © 2026 · absurd products, addictive visuals
+  </footer>
+
+  <script src="./main.js"></script>
+</body>
+</html>
